@@ -84,8 +84,8 @@ class ChordTrainer < Thor
   def test
     binding.pry
   end
-  desc "start", "start telegram bot"
-  def start
+  desc "listen", "start telegram bot"
+  def listen
     if !File.exist?($setfile)
       puts "set params"
       return nil
@@ -122,10 +122,12 @@ def autorestart(args)
   rescue => e
     $counter += 1
     puts "(#{$counter})\t#{e.class}"
+    puts e.message
     sleep 5
     autorestart(args)
   end
 end
 
 autorestart(ARGV)
+#ChordTrainer.start(ARGV)
 
