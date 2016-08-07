@@ -15,7 +15,12 @@ class Player
   end
 end
 $players = []
-$answers = ["C","D","d","e","F","G","g","a","B","h"]
+$answers = (("a".."h").to_a | ("A".."H").to_a | ["Cis", "Es", "Fis", "As", "cis", "es", "fis", "as"]).map do |a|
+  [a,a+"6",a+"64"]
+end.inject{|sum,e| sum | e}
+
+
+
 def audio(bot,message)
   player = $players.find{|p| p.id == message.chat.id}
   if !player
