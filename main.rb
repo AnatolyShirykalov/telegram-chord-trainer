@@ -115,5 +115,17 @@ class ChordTrainer < Thor
     end
   end
 end
+$counter = 0
+def autorestart(args)
+  begin
+    ChordTrainer.start(args)
+  rescue => e
+    $counter += 1
+    puts "(#{$counter})\t#{e.class}"
+    sleep 5
+    autorestart(args)
+  end
+end
 
-ChordTrainer.start(ARGV)
+autorestart(ARGV)
+
