@@ -6,6 +6,6 @@ gem install telegram-bot-ruby
 
 gem install thor
 
-ruby main.rb set --token=YOUR_TOKEN
+ruby main.rb set --token=[YOUR_TOKEN] (https://telegram.me/botfather)
 
 ruby main.rb start
