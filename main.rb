@@ -106,7 +106,7 @@ class ChordTrainer < Thor
           finish(bot,message)
         else
           #puts message.text
-          if message.text.match /\A([a-hA-H]|[cCfF]is|[eEaA]s)\d*\z/
+          if message.text.match /\A([a-hA-H]|[cCfF]is|[eEaA]s)(aug|dim)?\d*\z/
             check_player_ans(bot,message)
           else
             answers = Telegram::Bot::Types::ReplyKeyboardMarkup
