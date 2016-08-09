@@ -15,7 +15,7 @@ class Player
   end
 end
 $players = []
-$answers = DIR.entries('samples')
+$answers = Dir.entries('samples')
 
 
 
