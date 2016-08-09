@@ -15,9 +15,7 @@ class Player
   end
 end
 $players = []
-$answers = (("a".."h").to_a | ("A".."H").to_a | ["Cis", "Es", "Fis", "As", "cis", "es", "fis", "as"]).map do |a|
-  [a,a+"6",a+"64"]
-end.inject{|sum,e| sum | e}
+$answers = DIR.entries('samples')
 
 
 
