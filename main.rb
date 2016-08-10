@@ -15,7 +15,7 @@ class Player
   end
 end
 $players = []
-$answers = Dir.entries('samples')
+$answers = Dir.entries('samples').delete_if{|d| d=="." or d == ".."}
 
 
 
