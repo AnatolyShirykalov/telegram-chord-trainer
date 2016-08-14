@@ -3,15 +3,34 @@ require 'thor'
 require 'pry'
 $setfile = "settings.json"
 $dir = "samples"
+$users = ".users"
+$keyboards = {"main"=> (Telegram::Bot::Types::ReplyKeyboardMarkup
+          .new(keyboard: [['/audio','results']], one_time_keyboard: true))}
+
 def start_text
   "This will be a garmony trainer"
 end
 class Player
-  attr_reader :id
+  attr_reader :id, :global_right,:global_wrong
   attr_accessor :right, :wrong, :think
   def initialize(chat_id)
     @id = chat_id;
     @right = @wrong = 0
+    @global_right=@global_wrong = 0
+    if File.exists?("#{$users}/#{@id}")
+      info = JSON.parse(open("#{$users}/#{@id}").read)
+      @global_right = info["global_right"]
+      @global_wrong = info["global_wrong"]
+    end
+  end
+  def save_results
+    @global_right += @right
+    @global_wrong += @wrong
+    @right=0
+    @wrong = 0
+    out = File.open("#{$users}/#{@id}","w")
+    out.write("{\"global_right\":#{@global_right},\"global_wrong\":#{@global_wrong}}")
+    out.close
   end
 end
 $players = []
@@ -39,6 +58,13 @@ def audio(bot,message)
   end
 end
 
+def results(bot,message)
+  player = $players.find{|p| p.id == message.chat.id}
+  player = Player.new(message.chat.id) if !player
+  $players<<player
+  bot.api.sendMessage(chat_id: message.chat.id, text: "right: #{player.global_right}, wrong: #{player.global_wrong}")
+end
+
 def check_player_ans(bot,message)
   player = $players.find{|p| p.id == message.chat.id}
   if !player
@@ -62,17 +88,14 @@ def finish(bot,message)
     puts "unknows player in finish"
     return nil
   end
-  answers = Telegram::Bot::Types::ReplyKeyboardMarkup
-          .new(keyboard: [['/audio']], one_time_keyboard: true)
 
-  bot.api.sendMessage(chat_id: message.chat.id,text: "Your score: #{player.right} right,  #{player.wrong} wrong", reply_markup: answers)
+  bot.api.sendMessage(chat_id: message.chat.id,text: "Your score: #{player.right} right,  #{player.wrong} wrong", reply_markup: $keyboards["main"])
   player.think = nil
+  player.save_results
 end
 def start(bot,message)
   question = "Hello, #{message.from.first_name}\n\n" + start_text
-  answers = Telegram::Bot::Types::ReplyKeyboardMarkup
-          .new(keyboard: [['/audio']], one_time_keyboard: true)
-  bot.api.send_message(chat_id: message.chat.id, text: question, reply_markup: answers)
+  bot.api.send_message(chat_id: message.chat.id, text: question, reply_markup: $keyboards["main"])
 end
 
 class ChordTrainer < Thor
@@ -104,6 +127,8 @@ class ChordTrainer < Thor
           audio(bot,message)
         when 'finish'
           finish(bot,message)
+	when 'results'
+	  results(bot,message)
         else
           #puts message.text
           if message.text.match /\A([a-hA-H]|[cCfF]is|[eEaA]s)(aug|dim)?\d*\z/
@@ -111,7 +136,7 @@ class ChordTrainer < Thor
           else
             answers = Telegram::Bot::Types::ReplyKeyboardMarkup
               .new(keyboard: [['/audio']], one_time_keyboard: true)
-            bot.api.send_message(chat_id: message.chat.id, text: '', reply_markup: answers)
+            bot.api.send_message(chat_id: message.chat.id, text: 'i', reply_markup: $keyboards["main"])
           end
         end
       end
@@ -126,6 +151,7 @@ def autorestart(args)
     $counter += 1
     puts "(#{$counter})\t#{e.class}"
     puts e.message
+    $players.each{|player| player.save_results}
     sleep 5
     autorestart(args)
   end
